@@ -1,6 +1,6 @@
 // components/Register.jsx
 import { useState } from "react";
-import { handleRegister } from "../controllers/registerController";
+import { handleRegister } from "../controllers/authController";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
