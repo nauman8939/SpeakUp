@@ -5,12 +5,12 @@ const sendEmail = require('../utils/sendEmail');
 const jwt = require('jsonwebtoken'); // Add this line
 const cookieParser = require('cookie-parser');
 const loadTemplate = require("../utils/loadTemplate");
+require("dotenv").config();
 
 const registerUser = async (req, res) => {
   try {
     const { payload } = req.body;
 
-    // Decrypt the payload
     const bytes = CryptoJS.AES.decrypt(payload, process.env.VITE_SECRET_KEY);
     const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 
@@ -22,13 +22,11 @@ const registerUser = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed, avatar });
 
-    // Load welcome email template with variables
     const emailHTML = loadTemplate("welcome.html", {
       name,
-      link: env.CLIENT_URL,
+      link: process.env.CLIENT_URL,
     });
 
-    // Send welcome email
     await sendEmail(email, "🎉 Welcome to SpeakUp!", emailHTML);
 
     res.status(201).json({ msg: 'User registered successfully', user });

@@ -1,6 +1,4 @@
 const Blog = require('../models/Blog');
-const { loadTemplate } = require("../utils/emailTemplate"); 
-const sendEmail = require("../utils/sendEmail"); 
 
 // Get all blogs
 exports.getAllBlogs = async (req, res) => {
@@ -28,38 +26,20 @@ exports.createBlog = async (req, res) => {
   try {
     const { title, content, tags, author, authorid } = req.body;
     const imageUrl = req.file?.path;
-
+    console.log("Image URL",imageUrl);
     const blog = new Blog({
       title,
       content,
       imageUrl,
       tags,
       author,
-      authorid,
+      authorid
     });
 
     await blog.save();
-
-    // Notify all users about the new blog
-    const users = await User.find({}, "email");
-    const blogLink = `${process.env.BLOG_BASE_URL}/blog/${blog._id}`;
-
-    const emailHTML = loadTemplate("newBlog.html", {
-      title,
-      author,
-      blogLink,
-    });
-
-    const sendPromises = users.map((user) =>
-      sendEmail(user.email, `📝 New Blog Published: ${title}`, emailHTML)
-    );
-
-    await Promise.all(sendPromises);
-
     res.status(201).json(blog);
   } catch (error) {
-    console.error("Error creating blog:", error.message);
-    res.status(500).json({ message: "Error creating blog", error: error.message });
+    res.status(500).json({ message: 'Error creating blog', error: error.message });
   }
 };
 // Update blog
