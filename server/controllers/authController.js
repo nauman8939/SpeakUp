@@ -95,15 +95,18 @@ const getMe = async (req, res) => {
 // In your authController.js
 const logout = async (req, res) => {
   try {
-    // Clear the token cookie
+    // Clear the token cookie with EXACT SAME options as login
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict"
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/", // Explicitly set path to match login
+      maxAge: 0 // Immediately expire the cookie
     });
 
     res.json({ message: "Logout successful" });
   } catch (err) {
+    console.error("Logout error:", err.message);
     res.status(500).json({ message: "Logout failed", error: err.message });
   }
 };
