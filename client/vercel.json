@@ -1,0 +1,21 @@
+{
+    "routes": [
+      {
+        "src": "/assets/(.*)",
+        "headers": {
+          "Content-Type": "text/javascript"
+        }
+      },
+      {
+        "src": "/_next/static/(.*)",
+        "headers": {
+          "Content-Type": "text/javascript"
+        }
+      },
+      {
+        "src": "/(.*)", 
+        "dest": "/index.html",
+        "status": 200
+      }
+    ]
+  }

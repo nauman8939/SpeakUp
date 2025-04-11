@@ -13,8 +13,13 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',          // Default is fine for Render
-    emptyOutDir: true,       // Ensures old files are removed
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`
+      }
+    }
   },
   base: '/',                 // Ensures correct routing in production
 });
