@@ -128,7 +128,7 @@ const sendResetEmail = async (req, res) => {
 
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
 
-    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}&email=${email}`;
+    const resetLink = `https://speakup-client.onrender.com/reset-password?token=${resetToken}&email=${email}`;
 
     // Load HTML template with variables
     const emailHTML = loadTemplate("resetPassword.html", {
