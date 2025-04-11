@@ -3,11 +3,11 @@ import { handleLogin } from "../controllers/authController";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useUser } from "../context/UserContext";  // Import useUser hook to update the user context
+import { useUser } from "../context/UserContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useUser(); // Get setUser from context
+  const { setUser } = useUser(); 
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +36,7 @@ export default function Login() {
     const result = await handleLogin(form, setUser);  // Pass setUser to update context
     if (result.success) {
       toast.success("Login successful!");
-      navigate("/home");  // Update path as per your routing
+      navigate("/");  // Update path as per your routing
     } else {
       toast.error(result.message);
     }
@@ -79,6 +79,12 @@ export default function Login() {
           >
             Sign In
           </button>
+
+          <p className="text-center text-sm text-gray-600">
+            <Link to="/forgot-password" className="text-blue-600 hover:underline">
+              Forgot password?
+            </Link>
+          </p>
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Don't have an account?{" "}

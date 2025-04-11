@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendEmail');
 const jwt = require('jsonwebtoken'); // Add this line
 const cookieParser = require('cookie-parser');
+const loadTemplate = require("../utils/loadTemplate");
 
 const registerUser = async (req, res) => {
   try {
@@ -21,12 +22,14 @@ const registerUser = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed, avatar });
 
-    const emailHTML = `
-      <h2>Welcome to SpeakUp, ${name} 👋</h2>
-      <p>We're thrilled to have you on board. Let's build something amazing together 🚀</p>
-    `;
+    // Load welcome email template with variables
+    const emailHTML = loadTemplate("welcome.html", {
+      name,
+      link: env.CLIENT_URL,
+    });
 
-    await sendEmail(email, "Welcome to SpeakUp!", emailHTML);
+    // Send welcome email
+    await sendEmail(email, "🎉 Welcome to SpeakUp!", emailHTML);
 
     res.status(201).json({ msg: 'User registered successfully', user });
   } catch (err) {
@@ -107,5 +110,97 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { login, registerUser, getMe, logout };
+
+const sendResetEmail = async (req, res) => {
+  try {
+    const { payload } = req.body;
+
+    const bytes = CryptoJS.AES.decrypt(payload, process.env.VITE_SECRET_KEY);
+    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+    const { email } = decryptedData;
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+
+    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}&email=${email}`;
+
+    // Load HTML template with variables
+    const emailHTML = loadTemplate("resetPassword.html", {
+      name: user.name,
+      resetLink,
+    });
+
+    await sendEmail(email, "🔐 Reset Your Password", emailHTML);
+
+    res.json({ message: "Reset email sent successfully" });
+  } catch (err) {
+    console.error("Reset Email Error:", err.message);
+    res.status(500).json({ message: "Failed to send reset email", error: err.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { payload } = req.body;
+    const bytes = CryptoJS.AES.decrypt(payload, process.env.VITE_SECRET_KEY);
+    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+
+    const { token, password } = decryptedData;
+    if (!token || !password) return res.status(400).json({ message: "Token and password are required" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Invalidate token if password was changed after token was issued
+    if (user.passwordChangedAt && decoded.iat * 1000 < user.passwordChangedAt.getTime()) {
+      return res.status(400).json({ message: "Token has expired due to password change" });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    user.password = hashed;
+    user.passwordChangedAt = new Date(); 
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+  }
+};
+
+const verifyResetToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ message: "Token is required" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) return res.status(404).json({ message: "Invalid token or user not found" });
+
+    // Check if password was changed after token was issued
+    if (user.passwordChangedAt && decoded.iat * 1000 < user.passwordChangedAt.getTime()) {
+      return res.status(400).json({ message: "Token has expired due to password change" });
+    }
+
+    res.json({ valid: true, user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+  }
+};
+
+
+module.exports = {
+  registerUser,
+  login,
+  getMe,
+  logout,
+  sendResetEmail,
+  resetPassword,
+  verifyResetToken
+};
 

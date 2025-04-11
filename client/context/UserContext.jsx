@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
       const res = await axios.get("/auth/me", { withCredentials: true });
       setUser(res.data.user);
     } catch (err) {
-      setUser(null); // In case of error (e.g., user not logged in)
+      setUser(null); 
     } finally {
       setLoading(false);
     }
@@ -28,9 +28,8 @@ export const UserProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  // Periodically check auth status (optional)
   useEffect(() => {
-    const interval = setInterval(fetchUser, 60 * 60 * 1000); // Check every hour
+    const interval = setInterval(fetchUser, 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

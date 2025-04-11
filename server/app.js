@@ -6,8 +6,9 @@ const cookieParser = require('cookie-parser');
 
 const connectDB = require("./config/db");
 const authRoutes = require('./routes/authRoutes');
+const blogsRoutes = require('./routes/blogRoutes');
 
-// Initialize the app before using any middleware
+// Initialize the app
 const app = express();
 
 // Load env variables
@@ -16,7 +17,7 @@ dotenv.config();
 // Connect to MongoDB
 connectDB();
 
-// Middleware
+// CORS configuration
 const corsOptions = {
   origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -25,16 +26,15 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Use cookie-parser middleware after initializing the app
+// Middleware
 app.use(cookieParser());
-
-// Use CORS middleware
 app.use(cors(corsOptions));
 
-// Use JSON parser middleware
-app.use(express.json());
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/blogs', blogsRoutes);
 
 module.exports = app;
