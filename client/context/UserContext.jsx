@@ -43,7 +43,7 @@ export const UserProvider = ({ children }) => {
       setUser(null);
       
       // Redirect to login
-      window.location.href = "/login";
+      window.location.href = "/";
     } catch (err) {
       console.error("Logout error:", err);
     }
