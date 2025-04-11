@@ -7,10 +7,12 @@ import { useUser } from "../context/UserContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useUser(); 
+  const { setUser } = useUser();
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,15 +34,19 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
-    const result = await handleLogin(form, setUser);  // Pass setUser to update context
+  
+    setLoading(true);
+    const result = await handleLogin(form, setUser);
+    setLoading(false);
+  
     if (result.success) {
       toast.success("Login successful!");
-      navigate("/");  // Update path as per your routing
+      navigate("/");
     } else {
       toast.error(result.message);
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -59,6 +65,7 @@ export default function Login() {
             onChange={handleChange}
             error={errors.email}
           />
+
           {/* Password */}
           <InputField
             label="Password"
@@ -75,10 +82,36 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition font-medium"
+            disabled={loading}
+            className={`w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-2.5 rounded-md transition font-medium ${
+              loading ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-700"
+            }`}
           >
-            Sign In
+            {loading && (
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                ></path>
+              </svg>
+            )}
+            {loading ? "Signing In..." : "Sign In"}
           </button>
+
 
           <p className="text-center text-sm text-gray-600">
             <Link to="/forgot-password" className="text-blue-600 hover:underline">
@@ -98,6 +131,7 @@ export default function Login() {
   );
 }
 
+// Reusable input component with toggle icon for password
 function InputField({
   label,
   name,

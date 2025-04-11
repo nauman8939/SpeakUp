@@ -17,6 +17,8 @@ const EditBlog = () => {
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const availableTags = [
     'Technology',
@@ -64,36 +66,43 @@ const EditBlog = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  setLoading(true);
 
-    const formData = new FormData();
-    formData.append('title', title.trim());
-    formData.append('content', content.trim());
-    formData.append('tags', JSON.stringify(selectedTags));
-    formData.append('author', user?._id);
-    formData.append('authorid', user?.email);
-    if (selectedImage) {
-      formData.append('image', selectedImage);
-    }
+  const formData = new FormData();
+  formData.append('title', title.trim());
+  formData.append('content', content.trim());
+  formData.append('tags', JSON.stringify(selectedTags));
+  formData.append('author', user?._id);
+  formData.append('authorid', user?.email);
+  if (selectedImage) {
+    formData.append('image', selectedImage);
+  }
 
+  try {
+    await updateBlog(id, formData);
+    navigate('/');
+  } catch (error) {
+    alert('Error updating blog: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleDelete = async () => {
+  if (confirm('Are you sure you want to delete this blog? This action cannot be undone.')) {
+    setDeleting(true);
     try {
-      await updateBlog(id, formData);
+      await deleteBlog(id);
       navigate('/');
     } catch (error) {
-      alert('Error updating blog: ' + error.message);
+      alert('Error deleting blog: ' + error.message);
+    } finally {
+      setDeleting(false);
     }
-  };
+  }
+};
 
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this blog? This action cannot be undone.')) {
-      try {
-        await deleteBlog(id);
-        navigate('/');
-      } catch (error) {
-        alert('Error deleting blog: ' + error.message);
-      }
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -234,11 +243,18 @@ const EditBlog = () => {
         {/* Action Buttons */}
         <div className="flex justify-between pt-6">
           
-          <button
+        <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            Update Post
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-60"
+            disabled={loading || deleting}
+            >
+            {loading ? (
+              <>
+                <span className="loader-small border-white"></span> Updating...
+              </>
+            ) : (
+              'Update Post'
+            )}
           </button>
         </div>
       </form>

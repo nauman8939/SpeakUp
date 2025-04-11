@@ -1,7 +1,6 @@
-// components/Register.jsx
 import { useState } from "react";
 import { handleRegister } from "../controllers/authController";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import toast from "react-hot-toast";
@@ -20,6 +19,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,7 +55,10 @@ export default function Register() {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setIsSubmitting(true);
     const result = await handleRegister(form);
+    setIsSubmitting(false);
+
     if (result?.success) {
       setOpenSuccessDialog(true);
       setForm({
@@ -127,9 +130,19 @@ export default function Register() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 transition font-medium"
+              disabled={isSubmitting}
+              className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-md transition font-medium ${
+                isSubmitting ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-700"
+              }`}
             >
-              Create Account
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin" size={18} />
+                  Please wait...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </button>
 
             <p className="text-center text-sm text-gray-600 mt-4">
