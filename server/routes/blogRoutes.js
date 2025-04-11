@@ -26,6 +26,7 @@ router.put(
   '/updateblogs/:id',
   authMiddleware,
   upload.single('image'), 
+  logImageMiddleware,
   blogController.updateBlog
 );
 

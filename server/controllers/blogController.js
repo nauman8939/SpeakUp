@@ -46,7 +46,8 @@ exports.createBlog = async (req, res) => {
 exports.updateBlog = async (req, res) => {
   try {
 
-    const { title, content, imageUrl,tags } = req.body;
+    const { title, content, tags } = req.body;
+    const imageUrl = req.file?.path;
     const blog = await Blog.findOneAndUpdate(
       { _id: req.params.id, author: req.userId },
       { title, content, imageUrl, tags,updatedAt: Date.now() },

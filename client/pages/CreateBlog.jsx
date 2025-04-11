@@ -51,7 +51,8 @@ const CreateBlog = () => {
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
-  
+    console.log("Selected Image:", selectedImage);
+
     try {
       await createBlog(formData);
       setSelectedImage(null);

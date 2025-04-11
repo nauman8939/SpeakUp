@@ -24,6 +24,11 @@ export const BlogProvider = ({ children }) => {
 
   const createBlog = async (blogData) => {
     try {
+      console.log("DATAAA:", blogData);
+
+      for (let pair of blogData.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
       const response = await axios.post('/blogs/createblogs', blogData);
       setBlogs(prev => [response.data, ...prev]);
       return response.data;
