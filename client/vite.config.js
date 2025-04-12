@@ -13,13 +13,23 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
-        entryFileNames: `assets/[name].[hash].js`,
-        chunkFileNames: `assets/[name].[hash].js`,
-        assetFileNames: `assets/[name].[hash].[ext]`
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        chunkFileNames: 'assets/[name].[hash].js',
+        entryFileNames: 'assets/[name].[hash].js',
       }
-    }
+    },
+    cssCodeSplit: false,
+    sourcemap: true
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+    },
+    postcss: './postcss.config.cjs'
   },
   base: '/',                 // Ensures correct routing in production
 });
