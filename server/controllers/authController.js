@@ -58,18 +58,26 @@ const login = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    // Try to set HTTP-only cookie
+    try {
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+        domain: process.env.COOKIE_DOMAIN
+      });
+    } catch (cookieError) {
+      console.log("Cookie setting failed, falling back to token response");
+    }
 
     const userResponse = {
       _id: user._id,
       name: user.name,
       email: user.email,
       avatar: user.avatar,
+      token // Send token in response as fallback
     };
 
     res.json({ message: "Login successful", user: userResponse });
@@ -80,13 +88,18 @@ const login = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
+    // First try to get token from cookie
+    let token = req.cookies.token;
+    
+    // If no cookie, try Authorization header
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.split(' ')[1];
+    }
 
-    const token = req.cookies.token;  
     if (!token) return res.status(401).json({ message: "Not logged in" });
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -98,17 +111,20 @@ const getMe = async (req, res) => {
   }
 };
 
-// In your authController.js
 const logout = async (req, res) => {
   try {
-    // Clear the token cookie with EXACT SAME options as login
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      path: "/", // Explicitly set path to match login
-      maxAge: 0 // Immediately expire the cookie
-    });
+    // Try to clear cookie
+    try {
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        path: "/",
+        domain: process.env.COOKIE_DOMAIN
+      });
+    } catch (cookieError) {
+      console.log("Cookie clearing failed, continuing with logout");
+    }
 
     res.json({ message: "Logout successful" });
   } catch (err) {
@@ -116,7 +132,6 @@ const logout = async (req, res) => {
     res.status(500).json({ message: "Logout failed", error: err.message });
   }
 };
-
 
 const sendResetEmail = async (req, res) => {
   try {
@@ -199,7 +214,6 @@ const verifyResetToken = async (req, res) => {
     res.status(400).json({ message: "Invalid or expired token", error: err.message });
   }
 };
-
 
 module.exports = {
   registerUser,
