@@ -7,7 +7,7 @@ function loadTemplate(fileName, variables = {}) {
   let template = fs.readFileSync(filePath, "utf8");
 
   for (const key in variables) {
-    const regex = new RegExp(`{{${key}}}`, "g");
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
     template = template.replace(regex, variables[key]);
   }
 

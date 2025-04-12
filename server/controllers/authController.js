@@ -22,12 +22,18 @@ const registerUser = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed, avatar });
 
-    const emailHTML = loadTemplate("welcome.html", {
-      name,
-      link: process.env.CLIENT_URL,
-    });
+    try {
+      const emailHTML = loadTemplate("welcome.html", {
+        name,
+        link: process.env.CLIENT_URL,
+      });
 
-    await sendEmail(email, "🎉 Welcome to SpeakUp!", emailHTML);
+      await sendEmail(email, "🎉 Welcome to SpeakUp!", emailHTML);
+      console.log("Welcome email sent successfully to:", email);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError.message);
+      // Don't fail the registration if email fails
+    }
 
     res.status(201).json({ msg: 'User registered successfully', user });
   } catch (err) {
